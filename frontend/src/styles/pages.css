@@ -1,0 +1,26 @@
+@layer pages {
+  /* Page-level adjustments that only make sense in context.
+     Anything reusable belongs in components.css instead. */
+
+  .page__head + .section { margin-top: calc(var(--section-gap) * -0.25); }
+
+  /* the triage body map wants to be tall and calm */
+  .grid--aside > .card:first-child .figure__svg { max-height: 520px; }
+
+  /* dashboard hero stats read as one band, not four boxes */
+  .section .grid--4 .stat { min-height: 132px; align-content: center; }
+
+  /* nutrition table stays legible on small screens */
+  @media (max-width: 720px) {
+    .table th:nth-child(4), .table td:nth-child(4) { display: none; }
+  }
+
+  /* care team rows breathe on mobile */
+  @media (max-width: 560px) {
+    .rows > li { grid-template-columns: minmax(0, 1fr); }
+    .rows > li > .pill { justify-self: start; }
+  }
+
+  /* the emergency button should never be the smallest thing on screen */
+  .topbar .btn--alarm { min-height: 52px; }
+}

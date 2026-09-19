@@ -1,0 +1,30 @@
+{
+  "name": "zenhealth",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ZenHealth — holistic health & wellness agent: symptom triage, condition-aware nutrition, wearable anomaly detection.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.0",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "vite": "^6.3.0",
+    "vitest": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

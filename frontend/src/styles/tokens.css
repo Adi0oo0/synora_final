@@ -1,0 +1,174 @@
+/* ──────────────────────────────────────────────────────────────
+   Design tokens. Everything visual reads from here.
+   Type scale follows a 1.2 minor third off a 17px base — the old
+   15px base made dense screens unreadable at arm's length.
+   ────────────────────────────────────────────────────────────── */
+@layer tokens {
+  :root {
+    color-scheme: light;
+
+    /* surfaces */
+    --paper: #ffffff;
+    --cream: #faf9f6;
+    --sunken: #f4f2ed;
+    --line: #e5e7eb;
+    --line-soft: #efeeea;
+    --grid: rgba(229, 231, 235, 0.7);
+
+    /* ink */
+    --ink: #22201b;
+    --ink-2: #514c44;
+    --ink-3: #7c7669;
+
+    /* accents */
+    --sage: #84a98c;
+    --sage-deep: #3f6349;
+    --sage-wash: #eef4f0;
+    --tea: #ddbea9;
+    --tea-wash: #faf2ec;
+    --sand: #f4a261;
+    --sand-wash: #fdf3e7;
+    --amber-ink: #8f5510;
+    --crimson: #e63946;
+    --crimson-deep: #ad1f2a;
+    --crimson-wash: #fcedee;
+
+    /* type */
+    --serif: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif;
+    --sans: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Helvetica Neue', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --text-2xs: 0.8125rem;   /* 13 — timestamps, units */
+    --text-xs: 0.875rem;     /* 14 — captions */
+    --text-sm: 0.9375rem;    /* 15 — secondary body, chips */
+    --text-base: 1.0625rem;  /* 17 — body */
+    --text-md: 1.1875rem;    /* 19 — lead paragraphs */
+    --text-lg: clamp(1.25rem, 1.16rem + 0.4vw, 1.4rem);
+    --text-xl: clamp(1.5rem, 1.36rem + 0.7vw, 1.8rem);
+    --text-2xl: clamp(1.875rem, 1.6rem + 1.2vw, 2.35rem);
+    --text-3xl: clamp(2.25rem, 1.8rem + 2vw, 3.1rem);
+    --text-4xl: clamp(2.75rem, 2rem + 3.2vw, 4.25rem);
+
+    --leading-tight: 1.24;
+    --leading-snug: 1.45;
+    --leading-body: 1.7;
+    --measure: 68ch;
+
+    /* space — 4px base, but the layout lives in the 24–64 range */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+
+    --gutter: clamp(1.5rem, 3.5vw, 4rem);
+    --stack: clamp(1.75rem, 2.4vw, 2.75rem);   /* gap between cards */
+    --card-pad: clamp(1.5rem, 2.2vw, 2.25rem); /* inside a card */
+    --section-gap: clamp(2.5rem, 4vw, 4.5rem); /* between page sections */
+    --nav-w: 268px;
+    --topbar-h: 76px;
+    --content-max: 1360px;
+
+    /* shape */
+    --r-sm: 8px;
+    --r: 12px;
+    --r-lg: 20px;
+    --r-pill: 999px;
+
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-lift: 0 12px 34px rgba(34, 32, 27, 0.1);
+    --ring: 0 0 0 3px rgba(132, 169, 140, 0.55);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 0.15s;
+    --dur: 0.28s;
+  }
+
+  /* text size control (Settings → Display) */
+  :root[data-text='large'] { font-size: 112.5%; }
+  :root[data-text='xlarge'] { font-size: 125%; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+      --paper: #1b1a16;
+      --cream: #131210;
+      --sunken: #100f0d;
+      --line: #322f28;
+      --line-soft: #26241f;
+      --grid: rgba(120, 114, 100, 0.14);
+      --ink: #f2eee5;
+      --ink-2: #c3bcae;
+      --ink-3: #8f887b;
+      --sage: #9cc0a5;
+      --sage-deep: #b7d6be;
+      --sage-wash: #1e2a21;
+      --tea: #e3c6b2;
+      --tea-wash: #2a231d;
+      --sand: #f3af74;
+      --sand-wash: #2c2317;
+      --amber-ink: #f3af74;
+      --crimson: #ff7079;
+      --crimson-deep: #ff9aa0;
+      --crimson-wash: #2e1a1c;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.5);
+      --ring: 0 0 0 3px rgba(156, 192, 165, 0.55);
+    }
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --paper: #1b1a16;
+    --cream: #131210;
+    --sunken: #100f0d;
+    --line: #322f28;
+    --line-soft: #26241f;
+    --grid: rgba(120, 114, 100, 0.14);
+    --ink: #f2eee5;
+    --ink-2: #c3bcae;
+    --ink-3: #8f887b;
+    --sage: #9cc0a5;
+    --sage-deep: #b7d6be;
+    --sage-wash: #1e2a21;
+    --tea: #e3c6b2;
+    --tea-wash: #2a231d;
+    --sand: #f3af74;
+    --sand-wash: #2c2317;
+    --amber-ink: #f3af74;
+    --crimson: #ff7079;
+    --crimson-deep: #ff9aa0;
+    --crimson-wash: #2e1a1c;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.5);
+    --ring: 0 0 0 3px rgba(156, 192, 165, 0.55);
+  }
+
+  :root[data-contrast='high'] {
+    --ink: #000000;
+    --ink-2: #191919;
+    --ink-3: #2f2f2f;
+    --line: #6b6b6b;
+    --line-soft: #6b6b6b;
+    --grid: rgba(0, 0, 0, 0.12);
+    --sage-deep: #1f4a2c;
+    --amber-ink: #653a05;
+    --crimson: #a3121f;
+    --crimson-deep: #7d0c17;
+    --shadow: none;
+    --shadow-lift: 0 0 0 2px currentColor;
+  }
+  :root[data-theme='dark'][data-contrast='high'] {
+    --ink: #ffffff;
+    --ink-2: #f1f1f1;
+    --ink-3: #dadada;
+    --line: #bdbdbd;
+    --line-soft: #bdbdbd;
+  }
+}
