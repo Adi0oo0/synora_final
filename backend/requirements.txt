@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+pydantic-settings
+python-dotenv
+numpy
+python-multipart
+pytest
+pytest-asyncio
+firebase-admin>=6.5.0
