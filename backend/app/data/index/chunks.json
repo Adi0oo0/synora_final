@@ -1,0 +1,136 @@
+[
+  {
+    "id": "exercise-chronic-conditions#0",
+    "title": "Physical activity with chronic conditions",
+    "source": "Exercise guidance summary for primary care",
+    "text": "General adult activity guidance suggests 150 to 300 minutes of moderate-intensity aerobic activity weekly, plus muscle-strengthening activity on two or more days.\n\nFor people with type 2 diabetes, activity improves insulin sensitivity, and the effect on glucose handling is short-lived enough that regular activity matters more than occasional long sessions. Gaps of more than two consecutive days are commonly discouraged. People taking insulin or sulfonylureas need individual advice about hypoglycaemia risk around exercise.\n\nFor people with raised blood pressure, regular aerobic activity is associated with meaningful average reductions. Heavy resistance work with breath-holding raises blood pressure acutely; steady breathing through the effort is generally advised.",
+    "tags": [
+      "exercise",
+      "diabetes",
+      "hypertension",
+      "wellness"
+    ]
+  },
+  {
+    "id": "exercise-chronic-conditions#1",
+    "title": "Physical activity with chronic conditions",
+    "source": "Exercise guidance summary for primary care",
+    "text": "average reductions. Heavy resistance work with breath-holding raises blood pressure acutely; steady breathing through the effort is generally advised.\n\nActivity should be stopped and medical advice sought for chest pain or pressure, unusual breathlessness, dizziness, or palpitations during exertion. These symptoms during activity are more concerning than the same symptoms at rest, not less.\n\nFoot inspection before and after activity is part of routine care for people with diabetes, particularly where any loss of sensation is present.\n\nStarting points should be built from current capacity rather than from a target. Increases of roughly ten percent per week in duration are a common conservative approach.",
+    "tags": [
+      "exercise",
+      "diabetes",
+      "hypertension",
+      "wellness"
+    ]
+  },
+  {
+    "id": "glycemic-index#0",
+    "title": "Glycaemic index, glycaemic load and meal composition",
+    "source": "Diabetes nutrition education summary",
+    "text": "Glycaemic index ranks carbohydrate-containing foods by how quickly they raise blood glucose relative to a reference. Values of 55 or below are commonly described as low, 56 to 69 as medium, and 70 or above as high.\n\nGlycaemic index alone is an incomplete guide because it ignores portion size. Glycaemic load, which multiplies the index by the available carbohydrate in the actual serving, describes real meals better. A high-index food in a small portion can affect glucose less than a medium-index food eaten in quantity.\n\nMeal composition changes the response. Protein, fat, and fibre eaten alongside carbohydrate slow gastric emptying and blunt the peak. The same bowl of rice produces a different curve when eaten with fish and vegetables than when eaten alone.",
+    "tags": [
+      "diabetes",
+      "glycemic",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "glycemic-index#1",
+    "title": "Glycaemic index, glycaemic load and meal composition",
+    "source": "Diabetes nutrition education summary",
+    "text": "slow gastric emptying and blunt the peak. The same bowl of rice produces a different curve when eaten with fish and vegetables than when eaten alone.\n\nOrder of eating has a measurable effect in several studies: consuming vegetables and protein before carbohydrate has been associated with lower post-meal glucose excursions.\n\nLight physical activity after eating, such as a ten to fifteen minute walk, is associated with reduced post-meal glucose peaks in people with and without type 2 diabetes.\n\nIndividual responses vary substantially. Continuous glucose data from the person themselves is more informative than any published index value.",
+    "tags": [
+      "diabetes",
+      "glycemic",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "red-flags#0",
+    "title": "Emergency red flags in primary-care triage",
+    "source": "Internal triage policy, reviewed by clinical lead",
+    "text": "Certain presentations bypass scoring entirely and are escalated to emergency care regardless of severity rating, duration, or patient history.\n\nChest pain or pressure accompanied by breathlessness, sweating, nausea, or pain radiating to the arm, jaw, or back is treated as a possible acute coronary event until assessed in person. Exertional onset raises concern further. The patient should not drive themselves.\n\nSudden facial drooping, one-sided weakness, slurred speech, or acute confusion is treated as a possible stroke. Time from onset determines treatment options, so the time symptoms were first noticed should be recorded and passed on.\n\nA sudden severe headache described as the worst ever experienced, reaching peak intensity within a minute, requires emergency assessment even if it subsequently eases.",
+    "tags": [
+      "triage",
+      "emergency",
+      "escalation"
+    ]
+  },
+  {
+    "id": "red-flags#1",
+    "title": "Emergency red flags in primary-care triage",
+    "source": "Internal triage policy, reviewed by clinical lead",
+    "text": "eadache described as the worst ever experienced, reaching peak intensity within a minute, requires emergency assessment even if it subsequently eases.\n\nBlood in vomit or stool, black tarry stool, or a rigid abdomen with severe pain requires same-day assessment.\n\nBreathlessness severe enough to prevent completing a sentence, fainting, or bleeding that cannot be controlled with direct pressure all require emergency services.\n\nTriage tooling must never soften, delay, or rationalise these presentations. An automated system's role is to recognise them and step out of the way.",
+    "tags": [
+      "triage",
+      "emergency",
+      "escalation"
+    ]
+  },
+  {
+    "id": "reflux-triggers#0",
+    "title": "Common reflux triggers and timing",
+    "source": "Gastro-oesophageal reflux patient education summary",
+    "text": "Reflux symptoms are driven by a combination of what is eaten, how much, and when. Timing is frequently more actionable than restriction.\n\nLarge meals distend the stomach and increase transient lower oesophageal sphincter relaxations. Smaller, more frequent meals are commonly better tolerated than the same total intake in two large ones.\n\nLying down within roughly three hours of eating is one of the most consistently reported aggravating factors. Evening meals eaten late are a common cause of overnight symptoms and of a night cough that can be mistaken for a chest problem.\n\nFrequently reported dietary triggers include high-fat and fried foods, which slow gastric emptying; caffeine and alcohol; carbonated drinks; chocolate and peppermint; and acidic foods such as citrus and tomato. Trigger patterns are individual, and blanket elimination of all of them is rarely necessary or sustainable.",
+    "tags": [
+      "gerd",
+      "reflux",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "reflux-triggers#1",
+    "title": "Common reflux triggers and timing",
+    "source": "Gastro-oesophageal reflux patient education summary",
+    "text": "nd acidic foods such as citrus and tomato. Trigger patterns are individual, and blanket elimination of all of them is rarely necessary or sustainable.\n\nRaising the head of the bed by 15 to 20 centimetres, using blocks under the bed frame rather than extra pillows, is associated with reduced nocturnal symptoms.\n\nPersistent symptoms despite these measures, difficulty swallowing, unintentional weight loss, or vomiting blood all warrant medical review rather than further self-management.",
+    "tags": [
+      "gerd",
+      "reflux",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "sodium-blood-pressure#0",
+    "title": "Dietary sodium and blood pressure",
+    "source": "Public health nutrition guidance summary",
+    "text": "Most adults consume substantially more sodium than they need. General population guidance commonly sets a target below 2,300 mg per day, with a tighter target near 1,500 mg per day often discussed for adults with raised blood pressure. Individual targets should come from the person's own clinician.\n\nIn practice, most dietary sodium is not added at the table. It arrives in bread, processed meat, cheese, sauces, instant noodle seasoning, miso, soy sauce, and restaurant broth. A single packaged noodle serving with its broth consumed can exceed an entire day's tighter target.\n\nBroth is a common and under-recognised source. Leaving a substantial portion of noodle or soup broth uneaten reduces sodium intake considerably without changing the meal itself.",
+    "tags": [
+      "hypertension",
+      "sodium",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "sodium-blood-pressure#1",
+    "title": "Dietary sodium and blood pressure",
+    "source": "Public health nutrition guidance summary",
+    "text": "-recognised source. Leaving a substantial portion of noodle or soup broth uneaten reduces sodium intake considerably without changing the meal itself.\n\nReductions in sodium intake are associated with modest average reductions in blood pressure, with larger effects in people whose blood pressure is already raised. Effects accumulate over weeks, not days, so single meals matter less than sustained patterns.\n\nPotassium-rich foods such as vegetables, legumes, and fruit are generally encouraged alongside sodium reduction, though people with reduced kidney function need individual advice before increasing potassium.",
+    "tags": [
+      "hypertension",
+      "sodium",
+      "nutrition"
+    ]
+  },
+  {
+    "id": "wearable-signals#0",
+    "title": "Interpreting consumer wearable signals",
+    "source": "Digital health measurement notes",
+    "text": "Consumer wearable measurements are estimates from optical and motion sensors, not clinical instruments. They are most useful as trends against a person's own baseline, and least useful as absolute single readings.\n\nResting heart rate varies with sleep quality, alcohol, hydration, ambient temperature, recent activity, acute illness, and stress. A single morning elevated above baseline is common and usually unremarkable. Sustained elevation across several days more often reflects something worth noting.\n\nHeart rate variability is highly individual. Comparing an individual's values against population norms is rarely meaningful; comparing against their own rolling baseline is.\n\nOptical blood oxygen readings are sensitive to fit, movement, skin perfusion, and temperature. Isolated low readings on a wrist device without symptoms are frequently artefact.",
+    "tags": [
+      "wearable",
+      "anomaly",
+      "vitals"
+    ]
+  },
+  {
+    "id": "wearable-signals#1",
+    "title": "Interpreting consumer wearable signals",
+    "source": "Digital health measurement notes",
+    "text": "ngs are sensitive to fit, movement, skin perfusion, and temperature. Isolated low readings on a wrist device without symptoms are frequently artefact.\n\nAutomated anomaly detection on these streams should be framed as a prompt to look, not as a finding. Alert text should state the measured deviation and the baseline it was measured against, avoid clinical interpretation, and avoid implying a cause.\n\nDetection thresholds involve a trade-off: tighter thresholds raise sensitivity and alert volume together, and alert fatigue reduces the value of every subsequent alert.",
+    "tags": [
+      "wearable",
+      "anomaly",
+      "vitals"
+    ]
+  }
+]
