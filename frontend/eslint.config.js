@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
+  { ignores: ['dist/**'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],
@@ -20,12 +21,17 @@ export default [
         console: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        globalThis: 'readonly',
+        navigator: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        process: 'readonly',
       },
     },
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^[A-Z]' }],
     },
   },
 ];

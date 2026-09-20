@@ -18,7 +18,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-from app.config import get_settings
+from synora_final.backend.app.config import get_settings
 
 log = logging.getLogger("zenhealth.firebase")
 

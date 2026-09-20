@@ -12,9 +12,9 @@ import logging
 import time
 from dataclasses import dataclass
 
-from app.config import get_settings
-from app.nim import NimError, NimNotConfigured, nim
-from app.rag.store import store
+from synora_final.backend.app.config import get_settings
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.rag.store import store
 
 log = logging.getLogger("zenhealth.rag")
 

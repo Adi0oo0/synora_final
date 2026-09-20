@@ -1,5 +1,7 @@
-// Offline nutrition table. The BFF replaces this with a VLM estimate when a
-// meal photo comes in — same shape either way.
+// Offline reference table of common foods (values per portion). A photo estimate
+// or a hand-entered food has the same shape, so all three flow through the same
+// scoring. This is a lookup table, not anyone's diary: what a person actually
+// ate lives in their own meal log.
 export const FOODS = [
   { id: 'avocado-toast', name: 'Avocado toast, one slice sourdough', kcal: 320, carbs: 30, protein: 9, fat: 19, fibre: 7, gi: 52, sodium: 480, tags: ['fatty'], portion: '1 slice' },
   { id: 'instant-ramen', name: 'Instant ramen, whole packet with broth', kcal: 480, carbs: 62, protein: 10, fat: 20, fibre: 2, gi: 73, sodium: 1720, tags: ['fatty', 'spicy'], portion: '1 packet' },
@@ -19,8 +21,3 @@ export const FOODS = [
 
 export const FOOD_BY_ID = Object.fromEntries(FOODS.map((f) => [f.id, f]));
 
-export const SEED_MEALS = [
-  { id: 'm1', foodId: 'greek-yoghurt', at: '07:20', label: 'Breakfast' },
-  { id: 'm2', foodId: 'black-coffee', at: '07:25', label: 'Breakfast' },
-  { id: 'm3', foodId: 'udon', at: '12:40', label: 'Lunch' },
-];

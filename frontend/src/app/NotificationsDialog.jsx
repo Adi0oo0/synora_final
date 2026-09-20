@@ -1,19 +1,25 @@
+import { Link } from 'react-router-dom';
 import Dialog from '../components/Dialog.jsx';
-import { Finding } from '../components/Primitives.jsx';
+import Icon from '../components/Icon.jsx';
 
-export default function NotificationsDialog({ open, onClose }) {
+export default function NotificationsDialog({ open, onClose, items }) {
   return (
-    <Dialog open={open} onClose={onClose} title="Notifications">
-      <ul className="findings">
-        <Finding warn>
-          06:40 — heart rate anomaly. Held 12 bpm above baseline for 14 minutes with no step count in
-          that window.
-        </Finding>
-        <Finding>
-          Yesterday — sodium over target. 2,340 mg logged against a 1,500 mg goal, mostly from broth.
-        </Finding>
-        <Finding>Dr. Sato replied to your last message and has slots open this afternoon.</Finding>
-      </ul>
+    <Dialog open={open} onClose={onClose} title="Needs your attention">
+      {items.length === 0 ? (
+        <p className="small">Nothing right now. Anything unusual in your readings, a check-up that has come due, or a symptom check that needs following up will show here.</p>
+      ) : (
+        <ul className="findings">
+          {items.map((n) => (
+            <li key={n.id} className={`finding${n.warn ? ' finding--warn' : ''}`}>
+              <Icon name={n.warn ? 'alert' : 'info'} size={18} />
+              <p>
+                {n.text}{' '}
+                <Link to={n.to} onClick={onClose}>Open</Link>
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </Dialog>
   );
 }

@@ -5,10 +5,10 @@ import { Button, IconButton } from '../components/Primitives.jsx';
 import { routeQuery } from '../lib/triage.js';
 import { useHealth } from '../state/HealthContext.jsx';
 
-export default function TopBar({ title, onMenu, onEmergency, onNotifications }) {
+export default function TopBar({ title, onMenu, onEmergency, onNotifications, notificationCount = 0 }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const { log, profile } = useHealth();
+  const { todayLog, profile } = useHealth();
 
   function submit(e) {
     e.preventDefault();
@@ -23,7 +23,8 @@ export default function TopBar({ title, onMenu, onEmergency, onNotifications }) 
         <div className="topbar__crumb hide-sm">
           <b>{title}</b>
           <span className="tiny">
-            {profile.shortName} · feeling {log.mood.toLowerCase()}, {log.severity}/10
+            {profile.name ? `${profile.name} · ` : ''}
+            {todayLog ? `feeling ${todayLog.mood.toLowerCase()}, ${todayLog.severity}/10` : 'no check-in yet today'}
           </span>
         </div>
       </div>
@@ -48,7 +49,12 @@ export default function TopBar({ title, onMenu, onEmergency, onNotifications }) 
           <span className="hide-sm">Symptom urgency check</span>
           <span className="sr-only">Open symptom urgency check</span>
         </Button>
-        <IconButton icon="bell" label="Notifications, 2 unread" count={2} onClick={onNotifications} />
+        <IconButton
+          icon="bell"
+          label={notificationCount ? `Notifications, ${notificationCount} needing attention` : 'Notifications'}
+          count={notificationCount}
+          onClick={onNotifications}
+        />
         <span className="face face--me hide-md" aria-hidden="true">
           <Icon name="user" size={24} />
         </span>

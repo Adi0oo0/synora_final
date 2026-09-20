@@ -1,5 +1,5 @@
-from app.rag.ingest import chunk_document, load_chunks
-from app.rag.store import VectorStore
+from synora_final.backend.app.rag.ingest import chunk_document, load_chunks
+from synora_final.backend.app.rag.store import VectorStore
 
 
 def test_corpus_loads_with_metadata():

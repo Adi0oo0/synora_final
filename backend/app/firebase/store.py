@@ -8,6 +8,9 @@ client sends, so one user cannot address another's data):
     users/{uid}/meals/{auto}             one document per analysed meal (no image)
     users/{uid}/chats/{chat_id}          title, created_at, updated_at
     users/{uid}/chats/{chat_id}/messages/{auto}
+    users/{uid}/state/main               the app's own copy of the person's data
+                                         (one JSON string, so Firestore's rules on
+                                         nested arrays and field names never apply)
 
 Writes are best-effort. A Firestore outage must never break a symptom check or
 an emergency response, so callers go through ``safe_call`` and failures are
@@ -17,17 +20,19 @@ logged by exception type only (never message text, which could echo health data)
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Awaitable, Callable, Protocol
 
-from app.config import get_settings
-from app.firebase.client import firebase
+from synora_final.backend.app.config import get_settings
+from synora_final.backend.app.firebase.client import firebase
 
 log = logging.getLogger("zenhealth.store")
 
 MESSAGE_LIMIT = 500
+STATE_MAX_BYTES = 900_000  # a Firestore document tops out at 1 MiB
 
 
 # ── record shaping (shared by every store so they cannot drift) ─────────────
@@ -94,6 +99,8 @@ class HistoryStore(Protocol):
     async def get_chat(self, uid: str, chat_id: str) -> dict | None: ...
     async def get_profile(self, uid: str) -> dict: ...
     async def put_profile(self, uid: str, data: dict) -> dict: ...
+    async def get_state(self, uid: str) -> dict | None: ...
+    async def put_state(self, uid: str, state: dict) -> None: ...
     async def delete_user_data(self, uid: str) -> None: ...
 
 
@@ -110,6 +117,8 @@ class NullStore:
     async def get_chat(self, *a: Any, **k: Any) -> dict | None: return None
     async def get_profile(self, *a: Any, **k: Any) -> dict: return {}
     async def put_profile(self, uid: str, data: dict) -> dict: return data
+    async def get_state(self, *a: Any, **k: Any) -> dict | None: return None
+    async def put_state(self, *a: Any, **k: Any) -> None: ...
     async def delete_user_data(self, *a: Any, **k: Any) -> None: ...
 
 
@@ -122,7 +131,7 @@ class MemoryStore:
         self._n = 0
 
     def _u(self, uid: str) -> dict:
-        return self.users.setdefault(uid, {"profile": {}, "triage": [], "meals": [], "chats": {}})
+        return self.users.setdefault(uid, {"profile": {}, "triage": [], "meals": [], "chats": {}, "state": None})
 
     def _id(self) -> str:
         self._n += 1
@@ -174,6 +183,13 @@ class MemoryStore:
     async def put_profile(self, uid, data):
         self._u(uid)["profile"].update({**data, "updated_at": self._now()})
         return await self.get_profile(uid)
+
+    async def get_state(self, uid):
+        raw = self._u(uid)["state"]
+        return json.loads(raw) if raw else None
+
+    async def put_state(self, uid, state):
+        self._u(uid)["state"] = json.dumps(state)
 
     async def delete_user_data(self, uid):
         self.users.pop(uid, None)
@@ -265,6 +281,18 @@ class FirestoreStore:
 
         await asyncio.to_thread(write)
         return await self.get_profile(uid)
+
+    async def get_state(self, uid):
+        def read() -> dict | None:
+            snap = self._user(uid).collection("state").document("main").get()
+            raw = (snap.to_dict() or {}).get("json") if snap.exists else None
+            return json.loads(raw) if raw else None
+
+        return await asyncio.to_thread(read)
+
+    async def put_state(self, uid, state):
+        doc = {"json": json.dumps(state, separators=(",", ":")), "updated_at": self._now()}
+        await asyncio.to_thread(lambda: self._user(uid).collection("state").document("main").set(doc))
 
     async def delete_user_data(self, uid):
         # Deletes the profile document and every subcollection under it.

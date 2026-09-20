@@ -1,6 +1,6 @@
-from app.firebase.auth import current_user, require_user
-from app.firebase.client import AuthError, AuthUser, firebase
-from app.firebase.store import (
+from synora_final.backend.app.firebase.auth import current_user, require_user
+from synora_final.backend.app.firebase.client import AuthError, AuthUser, firebase
+from synora_final.backend.app.firebase.store import (
     FirestoreStore,
     HistoryStore,
     MemoryStore,

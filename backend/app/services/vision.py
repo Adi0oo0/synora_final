@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import time
 
-from app.nim import NimError, NimNotConfigured, nim
-from app.nim.prompts import MEAL_VISION
-from app.rag.retriever import retrieve
-from app.nim.parsing import parse_json
-from app.services import nutrition
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.nim.prompts import MEAL_VISION
+from synora_final.backend.app.rag.retriever import retrieve
+from synora_final.backend.app.nim.parsing import parse_json
+from synora_final.backend.app.services import nutrition
 
 DISCLAIMER = (
     "Portion estimates from a photograph are approximate. Weigh food when precision matters, "

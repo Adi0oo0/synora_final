@@ -1,5 +1,7 @@
-// Symptom catalogue. `weight` feeds the deterministic triage score;
-// `redFlag: true` short-circuits straight to emergency framing.
+// Symptom catalogue. The ids, weights and red-flag marks mirror the backend's
+// catalogue in backend/app/services/triage.py exactly — src/test/parity.test.js
+// fails if the two drift, because an id the server does not know is silently
+// scored as zero there.
 export const REGIONS = {
   head: {
     id: 'head',
@@ -12,7 +14,7 @@ export const REGIONS = {
       { id: 'blurred', label: 'Blurred vision', weight: 16 },
       { id: 'light', label: 'Light hurts my eyes', weight: 8 },
       { id: 'droop', label: 'Face drooping or slurred speech', weight: 100, redFlag: true },
-      { id: 'worstheadache', label: 'Worst headache of my life, sudden', weight: 100, redFlag: true },
+      { id: 'worst_headache', label: 'Worst headache of my life, sudden', weight: 100, redFlag: true },
     ],
   },
   chest: {
@@ -23,8 +25,8 @@ export const REGIONS = {
     symptoms: [
       { id: 'pressure', label: 'Pressure or tightness', weight: 34 },
       { id: 'breath', label: 'Short of breath', weight: 30 },
-      { id: 'palps', label: 'Racing or skipping beats', weight: 18 },
-      { id: 'burn', label: 'Burning behind the breastbone', weight: 8 },
+      { id: 'palpitations', label: 'Racing or skipping beats', weight: 18 },
+      { id: 'burning', label: 'Burning behind the breastbone', weight: 8 },
       { id: 'cough', label: "Cough that won't settle", weight: 8 },
       { id: 'radiating', label: 'Pain spreading to arm or jaw', weight: 100, redFlag: true },
     ],
@@ -36,8 +38,8 @@ export const REGIONS = {
     labelPos: { x: 84, y: 44 },
     symptoms: [
       { id: 'nausea', label: 'Nausea', weight: 10 },
-      { id: 'bloat', label: 'Bloated after eating', weight: 6 },
-      { id: 'upper', label: 'Pain under the ribs', weight: 18 },
+      { id: 'bloating', label: 'Bloated after eating', weight: 6 },
+      { id: 'upper_pain', label: 'Pain under the ribs', weight: 18 },
       { id: 'reflux', label: 'Reflux when lying down', weight: 8 },
       { id: 'rigid', label: 'Belly hard and painful to touch', weight: 34 },
       { id: 'blood', label: 'Blood in stool or vomit', weight: 100, redFlag: true },
@@ -49,19 +51,33 @@ export const REGIONS = {
     node: { x: 37, y: 74 },
     labelPos: { x: 14, y: 74 },
     symptoms: [
-      { id: 'knee', label: 'Knee pain on stairs', weight: 8 },
-      { id: 'stiff', label: 'Morning stiffness', weight: 8 },
-      { id: 'swell', label: 'Swollen or warm to touch', weight: 16 },
+      { id: 'knee_pain', label: 'Joint pain on movement', weight: 8 },
+      { id: 'stiffness', label: 'Morning stiffness', weight: 8 },
+      { id: 'swelling', label: 'Swollen or warm to touch', weight: 16 },
       { id: 'range', label: "Can't bend it fully", weight: 10 },
-      { id: 'numb', label: 'Numbness or pins and needles', weight: 18 },
+      { id: 'numbness', label: 'Numbness or pins and needles', weight: 18 },
+    ],
+  },
+  // Not on the body map: whole-body symptoms are picked from the chips.
+  general: {
+    id: 'general',
+    label: 'Whole body',
+    symptoms: [
+      { id: 'fever', label: 'Fever', weight: 16 },
+      { id: 'fatigue', label: 'Unusual tiredness', weight: 8 },
+      { id: 'weight_loss', label: 'Weight loss without trying', weight: 22 },
+      { id: 'night_sweats', label: 'Night sweats', weight: 18 },
+      { id: 'fainting', label: 'Fainting or collapse', weight: 100, redFlag: true },
     ],
   },
 };
 
 export const REGION_IDS = Object.keys(REGIONS);
+export const MAP_REGION_IDS = REGION_IDS.filter((id) => REGIONS[id].node);
 
 export const TRIGGERS = [
   { id: 'exertion', label: 'Physical exertion', weight: 14 },
+  { id: 'rest', label: 'Happens at rest', weight: 10 },
   { id: 'meals', label: 'After meals', weight: 4 },
   { id: 'lying', label: 'Lying down', weight: 4 },
   { id: 'stress', label: 'Stress', weight: 5 },

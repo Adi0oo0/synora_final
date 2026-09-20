@@ -1,4 +1,4 @@
-import { CONDITIONS } from '../data/profile.js';
+import { CONDITIONS } from '../data/conditions.js';
 
 /**
  * Condition-aware food scoring.
@@ -9,6 +9,8 @@ import { CONDITIONS } from '../data/profile.js';
 const REFLUX_TAGS = ['fatty', 'fried', 'spicy', 'caffeine', 'acidic'];
 
 function diabetesImpact(food) {
+  if (food.gi == null)
+    return { level: 'caution', text: `No glycaemic index recorded for this food, so it can only be judged on carbs (${food.carbs ?? 0} g). Pair it with protein or fibre.` };
   if (food.gi >= 70)
     return { level: 'warn', text: `High glycaemic index (${food.gi}). Expect a sharp rise — pair it with protein or split the portion.` };
   if (food.gi >= 56)
@@ -70,10 +72,11 @@ export function macroSplit(food) {
   ];
 }
 
+/** Meals carry their own nutrition snapshot (`m.food`); `foodById` only serves older `{ foodId }` entries. */
 export function dayTotals(meals = [], foodById = {}) {
   return meals.reduce(
     (acc, m) => {
-      const f = foodById[m.foodId];
+      const f = m.food ?? foodById[m.foodId];
       if (!f) return acc;
       acc.kcal += f.kcal;
       acc.carbs += f.carbs;
@@ -102,4 +105,32 @@ export function searchFoods(query, foods) {
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score)
     .map((r) => r.food);
+}
+
+/** Scales a food's numbers for a number of servings (0.5, 1, 1.5, 2 ...). */
+export function scaleFood(food, servings = 1) {
+  const k = Number(servings) > 0 ? Number(servings) : 1;
+  const r = (v) => (v == null ? v : Math.round(v * k * 10) / 10);
+  return {
+    ...food,
+    kcal: Math.round(food.kcal * k),
+    carbs: r(food.carbs),
+    protein: r(food.protein),
+    fat: r(food.fat),
+    fibre: r(food.fibre),
+    sodium: Math.round(food.sodium * k),
+    portion: k === 1 ? food.portion : `${k} × ${food.portion || 'serving'}`,
+  };
+}
+
+/** Meals grouped by local day, newest day first, with totals. */
+export function dailyTotals(meals = [], localDate) {
+  const days = new Map();
+  for (const m of meals) {
+    const day = localDate(m.at);
+    days.set(day, [...(days.get(day) ?? []), m]);
+  }
+  return [...days.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([day, items]) => ({ day, count: items.length, ...dayTotals(items) }));
 }

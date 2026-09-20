@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from app.config import get_settings
-from app.firebase import firebase
-from app.rag.store import store
+from synora_final.backend.app.config import get_settings
+from synora_final.backend.app.firebase import firebase
+from synora_final.backend.app.rag.store import store
 
 router = APIRouter(tags=["meta"])
 

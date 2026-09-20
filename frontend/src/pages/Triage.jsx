@@ -1,33 +1,37 @@
 import { useMemo, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { Card, Button, Chip, Alert, SafetyStrip, Finding } from '../components/Primitives.jsx';
 import BodyDiagram from '../components/BodyDiagram.jsx';
 import Gauge from '../components/Gauge.jsx';
 import Icon from '../components/Icon.jsx';
-import { REGIONS, TRIGGERS, DURATIONS } from '../data/regions.js';
-import { scoreTriage, considerationsFor, nextStepFor } from '../lib/triage.js';
+import SeveritySlider from '../components/SeveritySlider.jsx';
+import { REGIONS, REGION_IDS, TRIGGERS, DURATIONS } from '../data/regions.js';
+import { scoreTriage, considerationsFor, nextStepFor, mergeServerResult, BANDS } from '../lib/triage.js';
 import { explainTriage } from '../lib/api.js';
+import { dateTimeLabel } from '../lib/dates.js';
+import { makeId } from '../lib/storage.js';
 import { useHealth } from '../state/HealthContext.jsx';
 
+const PILL = { low: 'ok', moderate: 'soon', immediate: 'late' };
+
 export default function Triage() {
-  const { setTriage, triage, conditionIds } = useHealth();
+  const { triage: history, latestTriage, conditionIds, addTriage, updateTriage, removeTriage } = useHealth();
   const { openEmergency } = useOutletContext();
+  const [params] = useSearchParams();
 
   const [region, setRegion] = useState('chest');
   const [symptoms, setSymptoms] = useState([]);
   const [triggers, setTriggers] = useState([]);
   const [severity, setSeverity] = useState(4);
   const [duration, setDuration] = useState('days');
-  const [notes, setNotes] = useState('');
-  const [result, setResult] = useState(triage ?? null);
-  const [explaining, setExplaining] = useState(false);
-  const [explanation, setExplanation] = useState(null);
-  const [citations, setCitations] = useState([]);
+  const [notes, setNotes] = useState((params.get('q') ?? '').slice(0, 500));
+  const [activeId, setActiveId] = useState(latestTriage?.id ?? null);
+  const [busyId, setBusyId] = useState(null);
+  const [offline, setOffline] = useState(false);
 
-  const input = useMemo(
-    () => ({ region, symptoms, triggers, severity, duration }),
-    [region, symptoms, triggers, severity, duration],
-  );
+  const result = useMemo(() => history.find((h) => h.id === activeId) ?? null, [history, activeId]);
+  const catalogue = REGIONS[region].symptoms;
+  const canRun = symptoms.length > 0 || notes.trim().length > 0;
 
   const toggle = (list, setList, id) =>
     setList(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
@@ -35,39 +39,57 @@ export default function Triage() {
   function pickRegion(next) {
     setRegion(next);
     setSymptoms([]);
-    setResult(null);
-    setExplanation(null);
+    setActiveId(null);
+  }
+
+  function startOver() {
+    setSymptoms([]);
+    setTriggers([]);
+    setNotes('');
+    setSeverity(4);
+    setDuration('days');
+    setActiveId(null);
+    setOffline(false);
   }
 
   async function run() {
-    if (!symptoms.length) return;
+    if (!canRun || busyId) return;
+    const input = { region, symptoms, triggers, severity, duration, notes: notes.trim() };
     const scored = scoreTriage(input);
-    const findings = considerationsFor(input, scored);
-    const payload = { ...scored, findings, input, at: new Date().toISOString() };
-    setResult(payload);
-    setTriage(payload);
-    setExplanation(null);
-    setCitations([]);
+    const entry = {
+      id: makeId('tri'),
+      at: new Date().toISOString(),
+      input,
+      conditionIds: [...conditionIds],
+      score: scored.score,
+      band: scored.band,
+      redFlag: scored.redFlag,
+      reasons: scored.reasons,
+      breakdown: scored.breakdown,
+      findings: considerationsFor({ ...input, conditionIds }, scored),
+      summary: null,
+      citations: [],
+      source: 'local',
+    };
+    addTriage(entry);
+    setActiveId(entry.id);
+    setOffline(false);
 
-    if (scored.band === 'immediate') return; // no model round-trip in front of an emergency
+    // No model round-trip in front of an emergency.
+    if (scored.band === 'immediate') return;
 
-    setExplaining(true);
-    const res = await explainTriage({
-      region,
-      symptoms,
-      triggers,
-      severity,
-      duration,
-      notes: notes.slice(0, 500),
-      conditionIds,
-    });
-    setExplaining(false);
-    if (res.ok && res.summary) setExplanation(res.summary);
-    if (res.ok && res.citations?.length) setCitations(res.citations);
+    setBusyId(entry.id);
+    const res = await explainTriage({ ...input, conditionIds });
+    setBusyId(null);
+    if (res.ok) updateTriage(entry.id, mergeServerResult(entry, res));
+    else setOffline(true);
   }
 
   const step = result ? nextStepFor(result.band) : null;
-  const catalogue = REGIONS[region].symptoms;
+  const labelOf = (h) => {
+    const list = REGIONS[h.input.region]?.symptoms ?? [];
+    return h.input.symptoms.map((id) => list.find((s) => s.id === id)?.label ?? id);
+  };
 
   return (
     <div className="page">
@@ -85,15 +107,15 @@ export default function Triage() {
           <Card title="Body map" kanji="体" subtitle="Tap a point, or use the buttons under the figure.">
             <BodyDiagram region={region} onSelect={pickRegion} />
             <ul className="chips">
-              {Object.values(REGIONS).map((r) => (
-                <Chip key={r.id} pressed={region === r.id} onClick={() => pickRegion(r.id)}>
-                  {r.label}
+              {REGION_IDS.map((id) => (
+                <Chip key={id} pressed={region === id} onClick={() => pickRegion(id)}>
+                  {REGIONS[id].label}
                 </Chip>
               ))}
             </ul>
           </Card>
 
-          <Card title={`What does the ${REGIONS[region].label.toLowerCase()} feel like?`} kanji="症状">
+          <Card title={region === 'general' ? 'How does the rest of you feel?' : `What does the ${REGIONS[region].label.toLowerCase()} feel like?`} kanji="症状">
             <div className="card__body">
               <fieldset className="fieldset" style={{ border: 0, padding: 0, margin: 0 }}>
                 <legend>Pick everything that applies.</legend>
@@ -111,26 +133,21 @@ export default function Triage() {
                 </ul>
               </fieldset>
 
-              <div className="grid grid--2" style={{ gap: 'var(--space-5)' }}>
-                <div className="field">
-                  <label htmlFor="duration">How long has it been going on?</label>
-                  <select id="duration" value={duration} onChange={(e) => setDuration(e.target.value)}>
-                    {DURATIONS.map((d) => (
-                      <option key={d.id} value={d.id}>{d.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="worst">Severity at its worst</label>
-                  <select id="worst" value={severity} onChange={(e) => setSeverity(Number(e.target.value))}>
-                    <option value={2}>2 — mild</option>
-                    <option value={4}>4 — noticeable</option>
-                    <option value={6}>6 — interferes with the day</option>
-                    <option value={8}>8 — hard to ignore</option>
-                    <option value={10}>10 — worst I have felt</option>
-                  </select>
-                </div>
+              <div className="field">
+                <label htmlFor="duration">How long has it been going on?</label>
+                <select id="duration" value={duration} onChange={(e) => setDuration(e.target.value)}>
+                  {DURATIONS.map((d) => (
+                    <option key={d.id} value={d.id}>{d.label}</option>
+                  ))}
+                </select>
               </div>
+
+              <SeveritySlider
+                label="Severity at its worst"
+                value={severity}
+                onChange={setSeverity}
+                hint="1 is barely noticeable. 10 is the worst you have felt."
+              />
 
               <fieldset className="fieldset" style={{ border: 0, padding: 0, margin: 0 }}>
                 <legend>What seems to set it off?</legend>
@@ -156,15 +173,14 @@ export default function Triage() {
                   placeholder="It started after I carried shopping up the stairs…"
                   onChange={(e) => setNotes(e.target.value)}
                 />
+                <span className="tiny">What you write here is read for emergency wording too, so describe it plainly.</span>
               </div>
 
               <div className="row">
-                <Button variant="solid" size="lg" onClick={run} disabled={!symptoms.length}>
-                  Check my symptoms
+                <Button variant="solid" size="lg" onClick={run} disabled={!canRun || Boolean(busyId)}>
+                  {busyId ? 'Checking…' : 'Check my symptoms'}
                 </Button>
-                <Button variant="ghost" onClick={() => { setSymptoms([]); setTriggers([]); setResult(null); setExplanation(null); }}>
-                  Start over
-                </Button>
+                <Button variant="ghost" onClick={startOver}>Start over</Button>
                 <Button variant="alarm" icon="alert" onClick={openEmergency}>
                   Emergency screen
                 </Button>
@@ -175,11 +191,11 @@ export default function Triage() {
       </section>
 
       {result && (
-        <section className="section">
+        <section className="section" id="triage-result" aria-live="polite">
           <div className="section__head">
             <h2>What the check found</h2>
             <span className="tiny">
-              Score {result.score}/100 · symptoms {result.breakdown.symptomScore} · triggers{' '}
+              {dateTimeLabel(result.at)} · score {result.score}/100 · symptoms {result.breakdown.symptomScore} · triggers{' '}
               {result.breakdown.triggerScore} · severity {result.breakdown.severityScore} · duration{' '}
               {result.breakdown.durationScore}
             </span>
@@ -190,7 +206,7 @@ export default function Triage() {
               <Gauge score={result.score} band={result.band} />
               {result.band !== 'low' && (
                 <Link className="btn btn--wide btn--solid" to="/care">
-                  <Icon name="steth" size={18} /> Go to the care team
+                  <Icon name="steth" size={18} /> Prepare a summary for a clinician
                 </Link>
               )}
             </Card>
@@ -206,24 +222,63 @@ export default function Triage() {
                     <Finding key={i} warn={f.warn}>{f.text}</Finding>
                   ))}
                 </ul>
-                {explaining && <p className="tiny">Writing a plain-language summary…</p>}
-                {explanation && (
-                  <Alert tone="sage" icon="info" title="In plain language">
-                    <p>{explanation}</p>
-                    {citations.length > 0 && (
+                {busyId === result.id && <p className="tiny">Writing a plain-language summary…</p>}
+                {result.summary && (
+                  <Alert tone={result.band === 'immediate' ? 'crimson' : 'sage'} icon="info" title="In plain language">
+                    <p>{result.summary}</p>
+                    {result.citations?.length > 0 && (
                       <ul className="chips" style={{ marginTop: 'var(--space-3)' }}>
-                        {citations.map((c) => (
+                        {result.citations.map((c) => (
                           <Chip key={c.id}>{c.title}</Chip>
                         ))}
                       </ul>
                     )}
                   </Alert>
                 )}
+                {offline && activeId === result.id && (
+                  <p className="tiny">
+                    The server could not be reached, so this is the on-device result. The urgency rules run in your browser too, so the band is unaffected — only the written summary is missing.
+                  </p>
+                )}
               </Card>
             </div>
           </div>
         </section>
       )}
+
+      <section className="section">
+        <div className="section__head">
+          <h2>Your earlier checks</h2>
+          <span className="tiny">{history.length ? `${history.length} saved` : ''}</span>
+        </div>
+        {history.length === 0 ? (
+          <div className="empty">
+            <p>No symptom checks yet. Each one you run is saved here, so you can see how things change and hand the latest to a clinician.</p>
+          </div>
+        ) : (
+          <Card tone="flat">
+            <ul className="rows">
+              {[...history].reverse().slice(0, 12).map((h) => (
+                <li key={h.id}>
+                  <div>
+                    <b className="serif" style={{ fontSize: 'var(--text-md)' }}>
+                      {REGIONS[h.input.region]?.label ?? h.input.region}: {labelOf(h).join(', ') || 'described in notes'}
+                    </b>
+                    <div className="tiny">{dateTimeLabel(h.at)} · severity {h.input.severity}/10</div>
+                  </div>
+                  <div className="row-tight">
+                    <span className={`pill pill--${PILL[h.band]}`}>{BANDS[h.band].label.split(' — ')[0]}</span>
+                    <Button variant="ghost" onClick={() => { setActiveId(h.id); setTimeout(() => document.getElementById('triage-result')?.scrollIntoView({ behavior: 'smooth' }), 0); }}>View</Button>
+                    <Button variant="ghost" onClick={() => { removeTriage(h.id); if (activeId === h.id) setActiveId(null); }} aria-label={`Delete the check from ${dateTimeLabel(h.at)}`}>
+                      Delete
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }

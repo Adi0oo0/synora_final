@@ -14,7 +14,7 @@ const LINKS = [
 ];
 
 export default function SideNav({ open, onNavigate }) {
-  const { triage } = useHealth();
+  const { latestTriage: triage, persistence } = useHealth();
 
   return (
     <nav className="sidenav" data-open={open} aria-label="Main">
@@ -23,7 +23,7 @@ export default function SideNav({ open, onNavigate }) {
         <div>
           <div className="brand__name">ZenHealth</div>
           <span className="brand__badge">
-            <i className="dot dot--live" /> Profile active
+            <i className="dot dot--live" /> {persistence.signedIn ? 'Signed in' : 'Saved on this device'}
           </span>
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function SideNav({ open, onNavigate }) {
 
       <div className="nav-foot">
         <p className="tiny">
-          Sample profile and synthetic sensor data. Not a medical record, not a diagnosis.
+          Everything here is what you entered. Not a medical record, not a diagnosis.
         </p>
       </div>
     </nav>

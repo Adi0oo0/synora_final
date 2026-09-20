@@ -24,7 +24,7 @@ from typing import Any, AsyncIterator
 
 import httpx
 
-from app.config import get_settings
+from synora_final.backend.app.config import get_settings
 
 log = logging.getLogger("zenhealth.nim")
 

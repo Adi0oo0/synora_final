@@ -14,13 +14,31 @@ const TIMEOUT_MS = 20000;
 // VITE_API_BASE to the backend's origin, e.g. https://synora-api.vercel.app
 const API_BASE = (import.meta.env?.VITE_API_BASE ?? '').replace(/\/+$/, '');
 
+// Set by state/AuthContext once someone signs in. Anonymous requests carry no
+// header, which is exactly what the backend expects: a symptom check must never
+// sit behind a login.
+let tokenGetter = null;
+export function setTokenGetter(fn) {
+  tokenGetter = fn;
+}
+
+async function authHeader() {
+  try {
+    const token = tokenGetter ? await tokenGetter() : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 async function request(path, { method = 'GET', body } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
+    const headers = { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(await authHeader()) };
     const res = await fetch(`${API_BASE}${path}`, {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
@@ -123,6 +141,56 @@ export async function searchLibrary(query, topK = 4) {
   }
 }
 
+// ── the signed-in person's own data (needs a Firebase token) ────────────────
+const statusOf = (error) => Number(String(error.message || error).match(/^\d{3}/)?.[0] ?? 0);
+
+/** `unavailable` means the server has no account storage (or no valid sign-in), not a network fault. */
+export async function getRemoteState() {
+  try {
+    const data = await get('/api/me/state');
+    return { ok: true, state: data.state ?? null };
+  } catch (error) {
+    const status = statusOf(error);
+    return { ok: false, unavailable: status === 503 || status === 401, error: String(error.message || error) };
+  }
+}
+
+export async function putRemoteState(state) {
+  try {
+    await request('/api/me/state', { method: 'PUT', body: { state } });
+    return { ok: true };
+  } catch (error) {
+    const status = statusOf(error);
+    return { ok: false, unavailable: status === 503 || status === 401, error: String(error.message || error) };
+  }
+}
+
+export async function deleteRemoteData() {
+  try {
+    await request('/api/me/data', { method: 'DELETE' });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: String(error.message || error) };
+  }
+}
+
+export async function listRemoteChats() {
+  try {
+    const data = await get('/api/me/chats');
+    return { ok: true, items: data.items ?? [] };
+  } catch {
+    return { ok: false, items: [] };
+  }
+}
+
+export async function getRemoteChat(id) {
+  try {
+    return { ok: true, chat: await get(`/api/me/chats/${encodeURIComponent(id)}`) };
+  } catch {
+    return { ok: false, chat: null };
+  }
+}
+
 export async function health() {
   try {
     const data = await get('/api/health');
@@ -149,7 +217,7 @@ export function fileToDataUrl(file) {
  *
  * Returns an { abort() } handle so the caller can cancel mid-stream.
  */
-export function streamChat({ messages, conditionIds = [], thinking = false, useRag = true }, handlers = {}) {
+export function streamChat({ messages, conditionIds = [], thinking = false, useRag = true, chatId }, handlers = {}) {
   const controller = new AbortController();
   const { onRoute, onCitations, onReasoning, onContent, onDone, onError } = handlers;
 
@@ -158,12 +226,13 @@ export function streamChat({ messages, conditionIds = [], thinking = false, useR
     try {
       res = await fetch(`${API_BASE}/api/chat/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
         body: JSON.stringify({
           messages,
           condition_ids: conditionIds,
           thinking,
           use_rag: useRag,
+          ...(chatId ? { chat_id: chatId } : {}),
         }),
         signal: controller.signal,
       });

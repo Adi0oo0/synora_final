@@ -18,7 +18,7 @@ import logging
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.firebase.client import AuthError, AuthUser, firebase
+from synora_final.backend.app.firebase.client import AuthError, AuthUser, firebase
 
 log = logging.getLogger("zenhealth.auth")
 

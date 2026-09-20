@@ -1,30 +1,55 @@
 /**
- * Rolling z-score anomaly detection for wearable streams.
+ * Rolling z-score anomaly detection over a series of readings.
  *
- * Deliberately not a model call: this runs on every sample at the edge of the
- * stream, so it has to be cheap and predictable. Swap the transport for Kafka
- * or Flink and this function is still the decision rule.
+ * Deliberately not a model call: it has to be cheap and predictable, and the
+ * same readings must always give the same answer.
+ *
+ * Two details matter with real data:
+ *  - While a run is open the baseline is frozen at the moment it opened.
+ *    Without that, the anomalous readings drag the rolling mean and spread
+ *    towards themselves and a genuine sustained shift stops looking unusual
+ *    after two samples.
+ *  - The spread has a floor of 2% of the mean, so a stretch of identical
+ *    readings (blood pressure typed in as 120/80 five days running) does not
+ *    make a one-point change look like an emergency.
  */
+const SD_FLOOR = 0.02;
+
 export function detectAnomalies(points = [], opts = {}) {
   const { window = 12, threshold = 2.5, minRun = 3 } = opts;
   const out = [];
   let run = [];
+  let frozen = null;
+  const maxRun = window * 2; // a shift that lasts this long is the new normal
+
+  const close = () => {
+    if (run.length >= minRun) out.push(summarise(run));
+    run = [];
+    frozen = null;
+  };
 
   for (let i = window; i < points.length; i += 1) {
-    const slice = points.slice(i - window, i).map((p) => p.v);
-    const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
-    const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / slice.length;
-    const sd = Math.sqrt(variance) || 0.0001;
+    let mean;
+    let sd;
+    if (frozen) {
+      ({ mean, sd } = frozen);
+    } else {
+      const slice = points.slice(i - window, i).map((p) => p.v);
+      mean = slice.reduce((a, b) => a + b, 0) / slice.length;
+      const variance = slice.reduce((a, b) => a + (b - mean) ** 2, 0) / slice.length;
+      sd = Math.max(Math.sqrt(variance), Math.abs(mean) * SD_FLOOR, 0.0001);
+    }
     const z = (points[i].v - mean) / sd;
 
     if (Math.abs(z) >= threshold) {
+      if (!run.length) frozen = { mean, sd };
       run.push({ ...points[i], z, mean });
+      if (run.length >= maxRun) close();
     } else if (run.length) {
-      if (run.length >= minRun) out.push(summarise(run));
-      run = [];
+      close();
     }
   }
-  if (run.length >= minRun) out.push(summarise(run));
+  close();
   return out;
 }
 
@@ -46,7 +71,7 @@ function summarise(run) {
 /** Human sentence for a detection. Kept out of the UI so it can be tested. */
 export function describeAnomaly(stream, a) {
   const sign = a.direction === 'above' ? '+' : '';
-  return `${sign}${a.delta} ${stream.unit} ${a.direction} baseline for ${a.samples} samples (z ${a.z}).`;
+  return `${sign}${a.delta} ${stream.unit} ${a.direction} baseline across ${a.samples} reading${a.samples === 1 ? '' : 's'} (z ${a.z}).`;
 }
 
 /** Anomalies are signals, not verdicts. This decides how loudly to say it. */

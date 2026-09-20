@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import time
 
-from app.nim import NimError, NimNotConfigured, nim
-from app.nim.parsing import parse_json
-from app.nim.prompts import TRIAGE_EXPLAINER
-from app.rag.retriever import format_context, retrieve
-from app.safety.redflags import EMERGENCY_TEXT, screen_text
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.nim.parsing import parse_json
+from synora_final.backend.app.nim.prompts import TRIAGE_EXPLAINER
+from synora_final.backend.app.rag.retriever import format_context, retrieve
+from synora_final.backend.app.safety.redflags import EMERGENCY_TEXT, screen_text
 
 DISCLAIMER = (
     "Triage guidance only. This is not a diagnosis and does not replace a clinician. "
@@ -66,6 +66,16 @@ TRIGGERS = {
     "exertion": 14, "meals": 4, "lying": 4, "stress": 5, "cold": 2, "night": 8, "rest": 10,
 }
 DURATIONS = {"today": 4, "days": 8, "week": 12, "longer": 16}
+
+# Why a single red-flag symptom is an emergency by itself. Mirrors the wording in
+# frontend/src/lib/triage.js so the person reads the same reason either way.
+RED_FLAG_REASONS = {
+    "droop": "Facial drooping or slurred speech is a stroke red flag. Call emergency services now — minutes change the outcome.",
+    "worst_headache": "A sudden, worst-ever headache needs emergency assessment even if it eases off.",
+    "radiating": "Chest pain spreading to the arm or jaw is treated as a possible heart attack until proven otherwise.",
+    "blood": "Blood in stool or vomit always needs same-day medical assessment.",
+    "fainting": "Fainting or collapse needs urgent in-person assessment.",
+}
 
 ESCALATION_RULES = [
     (
@@ -122,19 +132,22 @@ def score_triage(payload: dict) -> dict:
     catalogue = SYMPTOMS.get(region, {})
     symptom_score = 0
     red_flag = False
+    fired: list[str] = []
+    reasons: list[str] = []
     for sid in symptoms:
         entry = catalogue.get(sid)
         if not entry:
             continue
         symptom_score += int(entry["w"])
-        red_flag = red_flag or bool(entry.get("red"))
+        if entry.get("red"):
+            red_flag = True
+            if sid in RED_FLAG_REASONS:
+                reasons.append(RED_FLAG_REASONS[sid])
 
     trigger_score = sum(TRIGGERS.get(t, 0) for t in triggers)
     duration_score = DURATIONS.get(duration, 8)
     severity_score = severity * 3
 
-    fired: list[str] = []
-    reasons: list[str] = []
     for name, test, reason in ESCALATION_RULES:
         if test(region, symptoms, triggers, severity):
             red_flag = True
@@ -169,11 +182,16 @@ def considerations(payload: dict, result: dict) -> list[dict]:
 
     if region == "chest":
         if "burning" in symptoms and (triggers & {"meals", "lying"}):
-            out.append({"text": "Burning that follows meals or lying down fits the reflux pattern already "
-                                "on your profile. Worth raising, not worth panicking over.", "warn": False})
+            text = (
+                "Burning that follows meals or lying down fits the reflux you have listed. "
+                "Worth raising, not worth panicking over."
+                if "gerd" in conditions
+                else "Burning that follows meals or lying down is often reflux. Worth raising if it keeps coming back."
+            )
+            out.append({"text": text, "warn": False})
         if "palpitations" in symptoms:
-            out.append({"text": "Palpitations read better alongside your wearable trace, so the most recent "
-                                "flagged window is attached to this summary.", "warn": False})
+            out.append({"text": "Note when the palpitations happen and, if you have a monitor, your heart rate "
+                                "at the time. That is what a clinician will ask.", "warn": False})
     if region == "abdomen":
         if "nausea" in symptoms and "bloating" in symptoms and "t2d" in conditions:
             out.append({"text": "Nausea with bloating can follow slow stomach emptying, which is more common "

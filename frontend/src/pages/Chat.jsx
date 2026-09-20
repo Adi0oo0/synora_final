@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { Card, Button, Chip, Alert, SafetyStrip } from '../components/Primitives.jsx';
 import Icon from '../components/Icon.jsx';
-import { streamChat } from '../lib/api.js';
+import { streamChat, listRemoteChats, getRemoteChat } from '../lib/api.js';
+import { newChatId, readChats, titleFrom, writeChats } from '../lib/chats.js';
+import { useAuth } from '../state/AuthContext.jsx';
 import { useHealth } from '../state/HealthContext.jsx';
-import { CONDITIONS } from '../data/profile.js';
+import { CONDITIONS } from '../data/conditions.js';
 
 const STARTERS = [
   'What should I eat before a long walk?',
@@ -26,9 +28,13 @@ const ROUTE_LABEL = { wellness: 'wellness', clinical: 'symptom check', admin: 'a
  */
 export default function Chat() {
   const { conditionIds } = useHealth();
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
   const { openEmergency } = useOutletContext();
 
-  const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState(() => readChats(uid));
+  const [chatId, setChatId] = useState(() => readChats(uid)[0]?.id ?? newChatId());
+  const [messages, setMessages] = useState(() => readChats(uid)[0]?.messages ?? []);
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [thinking, setThinking] = useState(false);
@@ -37,6 +43,65 @@ export default function Chat() {
 
   const streamRef = useRef(null);
   const endRef = useRef(null);
+
+  // Whose threads are on screen changes with sign-in/out.
+  useEffect(() => {
+    const mine = readChats(uid);
+    setChats(mine);
+    setChatId(mine[0]?.id ?? newChatId());
+    setMessages(mine[0]?.messages ?? []);
+    if (!uid) return undefined;
+    let cancelled = false;
+    listRemoteChats().then(({ items }) => {
+      if (cancelled || !items.length) return;
+      setChats((cur) => {
+        const known = new Set(cur.map((c) => c.id));
+        const stubs = items.filter((i) => !known.has(i.id)).map((i) => ({ id: i.id, title: i.title, updatedAt: i.updated_at ?? i.created_at ?? '', messages: [], remote: true }));
+        return stubs.length ? [...cur, ...stubs] : cur;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
+
+  // Save the open thread whenever it changes (not mid-stream: the finished turn is what counts).
+  useEffect(() => {
+    if (streaming || !messages.length) return;
+    setChats((cur) => {
+      const first = messages.find((m) => m.role === 'user');
+      const next = [
+        { id: chatId, title: titleFrom(first?.content), updatedAt: new Date().toISOString(), messages },
+        ...cur.filter((c) => c.id !== chatId),
+      ];
+      writeChats(uid, next);
+      return next;
+    });
+  }, [messages, streaming, chatId, uid]);
+
+  function newChat() {
+    if (streaming) return;
+    setChatId(newChatId());
+    setMessages([]);
+    setError(null);
+  }
+
+  async function openChat(id) {
+    if (streaming || id === chatId) return;
+    const found = chats.find((c) => c.id === id);
+    if (!found) return;
+    if (found.remote && !found.messages.length) {
+      const { ok, chat } = await getRemoteChat(id);
+      if (!ok || !chat) return;
+      const loaded = chat.messages.map((m) => ({ id: m.id, role: m.role, content: m.content, route: m.route ? { route: m.route, red_flag: Boolean(m.red_flag) } : null }));
+      setChats((cur) => cur.map((c) => (c.id === id ? { ...c, messages: loaded, remote: false } : c)));
+      setMessages(loaded);
+    } else {
+      setMessages(found.messages);
+    }
+    setChatId(id);
+    setError(null);
+  }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
@@ -75,6 +140,7 @@ export default function Chat() {
         conditionIds,
         thinking,
         useRag,
+        chatId,
       },
       {
         onRoute: (route) => {
@@ -129,6 +195,21 @@ export default function Chat() {
 
       <section className="section">
         <Card tone="flat" className="chat">
+          <div className="between" style={{ padding: 'var(--space-3) var(--space-4)', borderBottom: '1px solid var(--line)' }}>
+            <div className="row-tight">
+              <Button variant="ghost" onClick={newChat} disabled={streaming || !messages.length}>New chat</Button>
+              {chats.length > 1 && (
+                <div className="field">
+                  <label className="sr-only" htmlFor="chat-pick">Earlier chats</label>
+                  <select id="chat-pick" value={chatId} onChange={(e) => openChat(e.target.value)} disabled={streaming}>
+                    {!chats.some((c) => c.id === chatId) && <option value={chatId}>New chat</option>}
+                    {chats.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+            <span className="tiny">Saved as you go</span>
+          </div>
           <div className="chat__log">
             {messages.length === 0 && (
               <div className="chat__empty">
@@ -167,7 +248,7 @@ export default function Chat() {
                   )}
 
                   {m.role === 'assistant' && m.route?.route === 'clinical' && !m.route.red_flag && !m.pending && (
-                    <Link className="btn btn--sage" to="/triage">
+                    <Link className="btn btn--sage" to={`/triage?q=${encodeURIComponent((messages[messages.findIndex((x) => x.id === m.id) - 1]?.content ?? '').slice(0, 500))}`}>
                       <Icon name="body" size={16} /> Open the symptom check
                     </Link>
                   )}

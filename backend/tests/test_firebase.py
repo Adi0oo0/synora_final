@@ -10,7 +10,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from app.firebase import (
+from synora_final.backend.app.firebase import (
     AuthError,
     AuthUser,
     MemoryStore,
@@ -20,8 +20,8 @@ from app.firebase import (
     get_store,
     require_user,
 )
-from app.firebase.store import chat_title, safe_call, save_inline
-from app.main import app
+from synora_final.backend.app.firebase.store import chat_title, safe_call, save_inline
+from synora_final.backend.app.main import app
 
 TRIAGE = dict(region="chest", symptoms=["burning"], triggers=["meals"], severity=3, duration="days", explain=False)
 EMERGENCY = "I have chest pain spreading to my arm"
@@ -229,3 +229,44 @@ def test_saves_are_awaited_in_request_on_vercel(api, monkeypatch):
     client, store, _ = api
     assert client.post("/api/triage", json=TRIAGE).status_code == 200
     assert len(store.users["alice"]["triage"]) == 1
+
+
+# ── the app's saved record ───────────────────────────────────────────────
+def test_state_is_empty_until_saved_then_round_trips(api):
+    client, _, _ = api
+    assert client.get("/api/me/state").json() == {"state": None}
+    record = {"version": 2, "meals": [{"id": "meal_1", "food": {"name": "Miso soup"}}], "nested": [[1, 2], [3]]}
+    assert client.put("/api/me/state", json={"state": record}).json() == {"saved": True}
+    assert client.get("/api/me/state").json() == {"state": record}
+
+
+def test_state_is_scoped_to_the_verified_user(api):
+    client, _, who = api
+    client.put("/api/me/state", json={"state": {"secret": "alice"}})
+    who["user"] = AuthUser(uid="bob")
+    assert client.get("/api/me/state").json() == {"state": None}
+
+
+def test_state_needs_a_sign_in(api):
+    client, _, _ = api
+    app.dependency_overrides.pop(require_user, None)  # back to the real check
+    assert client.get("/api/me/state").status_code in (401, 503)
+    assert client.put("/api/me/state", json={"state": {}}).status_code in (401, 503)
+
+
+def test_oversized_state_is_refused(api):
+    client, _, _ = api
+    assert client.put("/api/me/state", json={"state": {"blob": "x" * 950_000}}).status_code == 422
+
+
+def test_erasing_my_data_erases_the_saved_state(api):
+    client, _, _ = api
+    client.put("/api/me/state", json={"state": {"a": 1}})
+    client.delete("/api/me/data")
+    assert client.get("/api/me/state").json() == {"state": None}
+
+
+def test_state_write_is_refused_when_storage_is_off(api):
+    client, _, _ = api
+    app.dependency_overrides[get_store] = lambda: NullStore()
+    assert client.put("/api/me/state", json={"state": {}}).status_code == 503

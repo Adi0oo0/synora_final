@@ -1,4 +1,4 @@
-from app.nim.parsing import parse_json
+from synora_final.backend.app.nim.parsing import parse_json
 
 
 def test_parse_json_handles_fences_and_garbage():

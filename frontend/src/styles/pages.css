@@ -21,6 +21,17 @@
     .rows > li > .pill { justify-self: start; }
   }
 
+  /* small inline forms (add a reading, add a medicine) */
+  .formrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: var(--space-4); align-items: end; }
+  .empty { display: grid; gap: var(--space-3); padding: var(--space-6); border: 1px dashed var(--line); border-radius: var(--r-md); background: var(--cream); }
+  .empty p { max-width: 60ch; }
+  .banner { margin-bottom: var(--space-6); }
+  .pre { white-space: pre-wrap; font-family: inherit; font-size: var(--text-sm); line-height: var(--leading-snug); background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--space-4); max-height: 420px; overflow: auto; }
+  .onboard { max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-5); display: grid; gap: var(--space-6); }
+  @media print {
+    .sidenav, .topbar, .footnote, .no-print { display: none !important; }
+  }
+
   /* the emergency button should never be the smallest thing on screen */
   .topbar .btn--alarm { min-height: 52px; }
 }

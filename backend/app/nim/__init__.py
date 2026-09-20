@@ -1,3 +1,3 @@
-from app.nim.client import NimClient, NimError, NimNotConfigured, Usage, nim
+from synora_final.backend.app.nim.client import NimClient, NimError, NimNotConfigured, Usage, nim
 
 __all__ = ["NimClient", "NimError", "NimNotConfigured", "Usage", "nim"]

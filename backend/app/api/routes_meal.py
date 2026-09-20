@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
-from app.firebase import AuthUser, HistoryStore, current_user, get_store, persist
-from app.schemas import MealRequest, MealResponse
-from app.services.vision import analyse_meal
+from synora_final.backend.app.firebase import AuthUser, HistoryStore, current_user, get_store, persist
+from synora_final.backend.app.schemas import MealRequest, MealResponse
+from synora_final.backend.app.services.vision import analyse_meal
 
 router = APIRouter(prefix="/meal", tags=["nutrition"])
 

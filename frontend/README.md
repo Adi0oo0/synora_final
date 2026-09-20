@@ -2,7 +2,7 @@
 
 A holistic health and wellness agent: symptom triage, condition-aware nutrition, coaching chat, and
 wearable anomaly detection in one place. React 19 + Vite on the front, talking to the FastAPI
-backend in [`zenhealth-backend`](../zenhealth-backend) (deterministic triage, RAG, vitals, and a
+backend in [`zenhealth-backend`](../zenhealth-backend) (deterministic triage, RAG, and a
 streaming chat coach) which holds the NVIDIA NIM key.
 
 ---
@@ -47,12 +47,12 @@ point `API_ORIGIN` / your reverse proxy at wherever the FastAPI backend runs.
 
 | Route | What lives there |
 | --- | --- |
-| `/` | Dashboard — today's log, the morning anomaly, urgency at a glance |
+| `/` | Dashboard — today's log, anything unusual in your readings, urgency at a glance |
 | `/chat` | Coaching chat — streams from the backend, with routing, citations and a reasoning panel |
 | `/triage` | Body map, symptom form, deterministic urgency result |
 | `/nutrition` | Food search, meal photo, per-condition verdicts, running day total |
-| `/vitals` | Four wearable streams, flagged windows, detector settings |
-| `/care` | Urgency gauge, video callback, clinician availability, medicines |
+| `/vitals` | Log readings, trend lines, flagged windows, detector settings |
+| `/care` | Urgency gauge, medicines, care contacts, clinician summary |
 | `/library` | Preventive care that's due, reading filtered by condition |
 | `/settings` | Conditions, text size, theme, contrast, motion |
 
@@ -65,11 +65,11 @@ browser (React)                         zenhealth-backend (FastAPI)      NVIDIA 
 ─────────────────                       ──────────────────────────      ──────────
 lib/triage.js      decides urgency
 lib/nutrition.js   scores food          POST /api/triage        ─────►  reasoning model
-lib/anomaly.js     watches streams      POST /api/meal/analyse  ─────►  vision model
+lib/anomaly.js     watches your readings      POST /api/meal/analyse  ─────►  vision model
 lib/api.js         ──────────────────►  POST /api/route         ─────►  light model
   · explainTriage()                     POST /api/chat/stream   ─────►  reasoning + RAG
   · analyseMealPhoto()                  POST /api/rag/search
-  · streamChat()      (SSE)             GET  /api/vitals/*
+  · streamChat()      (SSE)             GET/PUT /api/me/state (signed in)
                                          (key lives here only)
 ```
 
@@ -112,16 +112,45 @@ curl -s https://integrate.api.nvidia.com/v1/models \
 
 ---
 
-## What is real and what is sample data
+## Your data: what is saved, where, and how it loads
 
-Real: the triage rule engine, the nutrition scoring rules, the anomaly detector, the routing, every
-piece of the interface, and the whole backend path (including RAG over a real corpus in
-`app/data/corpus/`).
+There is no sample data. A new person starts with an empty profile and every page says so; everything
+that appears was entered by them.
 
-Sample: the profile (`src/data/profile.js`), the food table (`src/data/foods.js`), the wearable
-streams (`src/data/vitals.js`, seeded pseudo-random so they are reproducible), clinician availability
-and the article list. Swap each for a real source without touching a component — the shapes are the
-contract.
+| What | Entered on | Saved as |
+| --- | --- | --- |
+| Name, age, conditions, daily targets | first-run welcome, Settings | `profile` |
+| Daily mood / severity check-in | Dashboard | `logs` (one per day) |
+| Meals (table, photo estimate or by hand, with servings) | Nutrition | `meals`, each with its own nutrition snapshot |
+| Symptom checks, with the score, reasons and summary | Triage | `triage` |
+| Readings (BP, HR, glucose, SpO2, HRV, weight, HbA1c) | Vitals | `vitals` — the anomaly detector runs over these |
+| Medicines and today's doses | Care team | `medications` |
+| Care contacts | Care team | `contacts` |
+| When each check-up was last done | Preventive care | `preventive` |
+| Chat threads | Chat | separate key, `zenhealth.chats.v1.*` |
+
+**Saving is local-first.** Every change is written to `localStorage` immediately
+(`zenhealth.state.v2.<uid|guest>`, see `src/lib/storage.js`), so nothing is lost offline or without an
+account. Two people sharing a browser never see each other's data: each account has its own key.
+
+**Signing in is optional** and needs the `VITE_FIREBASE_*` variables (see `.env.example`) plus Firebase
+set up on the backend. When someone signs in, this device's data is merged into their account
+(`GET/PUT /api/me/state`), and kept in step after each change and whenever the tab regains focus. The merge
+(`mergeStates`) unions lists by id, keeps the newer save for a day's check-in, and honours deletions on either
+side. On sign-out the account copy is removed from the device only once the account is confirmed to hold it.
+
+Settings has Export / Import (JSON) and an Erase-everything button that also clears the account copy.
+
+Reference data that ships with the app (and is not anyone's diary): the symptom catalogue
+(`src/data/regions.js`), the condition list, the check-up templates (`src/data/preventive.js`), the small
+food table (`src/data/foods.js`), and the reading library (the backend's corpus).
+
+### Symptom check: browser and server agree
+
+`src/lib/triage.js` scores instantly in the browser; the backend scores the same way and adds a plain-language
+summary. `src/test/parity.test.js` reads the backend's catalogue and fails if a symptom id, weight or red flag
+differs. The server can only *raise* the band, never soften it. Free text in the notes box is screened for
+emergency wording on both sides.
 
 ---
 
@@ -147,8 +176,9 @@ Body text is 17px at 1.7 line-height by default. If that still reads tight on yo
 - Add structured logging and tracing at the backend boundary, but never log symptom text, chat
   messages, or meal photos — the backend's error handler deliberately returns a generic message
   rather than leaking internals.
-- Session data lives in `localStorage` only, on the client. Before this touches real patients, that
-  becomes a server-side record with proper consent, retention and audit.
+- Health data is stored in the browser and, for signed-in people, in Firestore (one JSON document per
+  person under `users/{uid}/state/main`, deny-all rules, access only through the API). Before this touches real
+  patients it still needs proper consent, retention and audit.
 
 ---
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
-from app.firebase import AuthUser, HistoryStore, current_user, get_store, persist
-from app.schemas import TriageRequest, TriageResponse
-from app.services.triage import run_triage
+from synora_final.backend.app.firebase import AuthUser, HistoryStore, current_user, get_store, persist
+from synora_final.backend.app.schemas import TriageRequest, TriageResponse
+from synora_final.backend.app.services.triage import run_triage
 
 router = APIRouter(prefix="/triage", tags=["triage"])
 

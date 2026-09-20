@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from app.rag.ingest import build_index
-from app.rag.retriever import retrieve
-from app.schemas import SearchRequest, SearchResponse
+from synora_final.backend.app.rag.ingest import build_index
+from synora_final.backend.app.rag.retriever import retrieve
+from synora_final.backend.app.schemas import SearchRequest, SearchResponse
 
 router = APIRouter(prefix="/rag", tags=["rag"])
 

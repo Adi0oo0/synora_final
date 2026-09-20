@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.triage import band_for, considerations, next_step, score_triage
+from synora_final.backend.app.services.triage import band_for, considerations, next_step, score_triage
 
 BASE = dict(region="chest", symptoms=["burning"], triggers=["meals"], severity=3, duration="days")
 
@@ -75,3 +75,16 @@ def test_next_step_never_reassures_on_immediate():
     step = next_step("immediate")
     assert "emergency" in step["body"].lower()
     assert "fine" not in step["body"].lower()
+
+
+def test_red_flag_symptoms_say_why():
+    result = score_triage(dict(region="head", symptoms=["droop"], triggers=[], severity=1, duration="today"))
+    assert any("stroke" in r.lower() for r in result["reasons"])
+
+
+def test_findings_do_not_claim_a_condition_the_person_did_not_list():
+    payload = dict(region="chest", symptoms=["burning"], triggers=["meals"], severity=3, duration="days")
+    text = " ".join(f["text"] for f in considerations(payload, score_triage(payload)))
+    assert "you have listed" not in text
+    text = " ".join(f["text"] for f in considerations({**payload, "condition_ids": ["gerd"]}, score_triage(payload)))
+    assert "you have listed" in text

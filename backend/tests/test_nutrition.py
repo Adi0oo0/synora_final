@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.nutrition import analyse, macro_consistency, overall
+from synora_final.backend.app.services.nutrition import analyse, macro_consistency, overall
 
 RAMEN = dict(name="ramen", kcal=480, carbs_g=62, protein_g=10, fat_g=20, fibre_g=2,
              sodium_mg=1720, glycemic_index=73, tags=["fatty", "spicy"])

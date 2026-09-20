@@ -1,5 +1,5 @@
-from app.config import Settings
-from app.nim.client import NimClient
+from synora_final.backend.app.config import Settings
+from synora_final.backend.app.nim.client import NimClient
 
 
 def _client(**overrides) -> NimClient:

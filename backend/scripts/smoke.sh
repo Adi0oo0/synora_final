@@ -27,9 +27,3 @@ curl -s -X POST "$BASE/api/triage" -H 'Content-Type: application/json' \
 echo "── rag ────────────────────────────────────────────"
 curl -s -X POST "$BASE/api/rag/search" -H 'Content-Type: application/json' \
   -d '{"query":"how much sodium is hiding in broth","top_k":3}' | jq '.hits[] | {id,title,score}'
-
-echo "── vitals snapshot ────────────────────────────────"
-curl -s "$BASE/api/vitals/snapshot?stream_id=hr&count=120" | jq '{anomalies,stats}'
-
-echo "── vitals live stream (10s) ───────────────────────"
-curl -sN --max-time 10 "$BASE/api/vitals/stream?count=60&interval_ms=150" | head -20

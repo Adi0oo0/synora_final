@@ -1,7 +1,7 @@
 import pytest
 
-from app.safety.redflags import screen_text
-from app.services.router import classify
+from synora_final.backend.app.safety.redflags import screen_text
+from synora_final.backend.app.services.router import classify
 
 
 @pytest.mark.asyncio

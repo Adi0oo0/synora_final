@@ -1,8 +1,7 @@
 # ZenHealth agent API
 
 Backend for the Holistic Health & Wellness Agent: deterministic symptom triage, condition-aware
-nutrition, multimodal meal recognition, RAG over a clinical corpus, and real-time wearable anomaly
-detection. FastAPI, NVIDIA NIM, no other infrastructure required to run it.
+nutrition, multimodal meal recognition, and RAG over a clinical corpus. FastAPI, NVIDIA NIM, no other infrastructure required to run it.
 
 **The model never decides anything that matters.** Urgency comes from a pure function. Nutrition
 verdicts come from condition rules. Anomalies come from arithmetic. The LLM writes prose, reads
@@ -45,11 +44,10 @@ Interactive docs at `http://localhost:8000/docs`.
 | `POST` | `/api/meal/analyse` | Meal photo → macros → per-condition verdicts |
 | `POST` | `/api/rag/search` | Retrieval with scores and sources |
 | `POST` | `/api/rag/reindex` | Rebuild the index after editing the corpus |
-| `GET` | `/api/vitals/snapshot` | Batch stream + detected anomalies (first paint) |
-| `GET` | `/api/vitals/stream` | SSE: live samples and anomaly alerts |
 | `POST` | `/api/chat/stream` | SSE coach: red-flag screen → route → RAG → stream |
 | `GET` | `/api/me` | Verify a Firebase token; returns uid, email, whether persistence is on |
 | `GET` `PUT` | `/api/me/profile` | Saved conditions and display name |
+| `GET` `PUT` | `/api/me/state` | The app's whole per-person record as one opaque JSON document (max ~900 KB); the client merges, the server stores it scoped to the token's uid |
 | `GET` | `/api/me/triage` · `/meals` · `/chats` | Newest-first history (`?limit=`) |
 | `GET` | `/api/me/chats/{chat_id}` | One saved thread with its messages |
 | `DELETE` | `/api/me/data` | Erase everything stored for the signed-in user |
@@ -66,8 +64,6 @@ event: reasoning    {"text":"..."}        # only when thinking=true
 event: content      {"text":"..."}        # the answer, token by token
 event: done         {"reason":"complete","model_called":true}
 ```
-
-`/api/vitals/stream` emits `sample`, `anomaly`, `stats`, `done`.
 
 ---
 
@@ -98,12 +94,8 @@ fat for reflux, sodium and protein for CKD. The model is never asked for a verdi
 talked out of one. A 240 kcal bowl of white rice still warns for diabetes and passes for blood
 pressure; that test is in `test_nutrition.py`.
 
-**Sensor anomaly detection.** `app/services/vitals.py` runs an online rolling z-score with a minimum
-run length to suppress single-sample blips. O(window) per sample, no allocation, no model. Measured
-p95 detection latency is roughly 2 microseconds per sample over 500 samples, and `stats()` exposes
-p50/p95/max so the number is checkable rather than claimed. Alert text states the deviation and the
-baseline and names no cause. Swap `synthetic_stream()` for a Kafka consumer; `RollingDetector.push()`
-is the entire contract.
+**Sensor anomaly detection** now lives entirely in the browser (`frontend/src/lib/anomaly.js`), running over
+readings the person logs. The backend no longer generates or streams any sample data.
 
 **RAG.** `app/rag/` ingests markdown with frontmatter, chunks on paragraphs with overlap, embeds via
 NeMo Retriever (`input_type` set correctly for queries versus passages — getting this wrong quietly

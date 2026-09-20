@@ -4,13 +4,13 @@ import uuid
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from app.firebase import AuthUser, HistoryStore, current_user, get_store, safe_call
-from app.nim import NimError, NimNotConfigured, nim
-from app.nim.prompts import WELLNESS_COACH
-from app.rag.retriever import format_context, retrieve
-from app.safety.redflags import EMERGENCY_TEXT, screen_text
-from app.schemas import ChatRequest
-from app.services.router import classify
+from synora_final.backend.app.firebase import AuthUser, HistoryStore, current_user, get_store, safe_call
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.nim.prompts import WELLNESS_COACH
+from synora_final.backend.app.rag.retriever import format_context, retrieve
+from synora_final.backend.app.safety.redflags import EMERGENCY_TEXT, screen_text
+from synora_final.backend.app.schemas import ChatRequest
+from synora_final.backend.app.services.router import classify
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 

@@ -15,10 +15,10 @@ from __future__ import annotations
 import re
 import time
 
-from app.nim import NimError, NimNotConfigured, nim
-from app.nim.prompts import INTENT_TIEBREAK
-from app.nim.parsing import parse_json
-from app.safety.redflags import screen_text
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.nim.prompts import INTENT_TIEBREAK
+from synora_final.backend.app.nim.parsing import parse_json
+from synora_final.backend.app.safety.redflags import screen_text
 
 CLINICAL_TERMS = [
     "pain", "ache", "aching", "hurts", "hurting", "sore", "burning", "cramp",

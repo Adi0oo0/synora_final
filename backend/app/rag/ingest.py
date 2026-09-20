@@ -11,8 +11,8 @@ import logging
 import re
 from pathlib import Path
 
-from app.nim import NimError, NimNotConfigured, nim
-from app.rag.store import Chunk, VectorStore, store
+from synora_final.backend.app.nim import NimError, NimNotConfigured, nim
+from synora_final.backend.app.rag.store import Chunk, VectorStore, store
 
 log = logging.getLogger("zenhealth.rag")
 

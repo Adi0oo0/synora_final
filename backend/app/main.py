@@ -8,21 +8,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import (
-    routes_chat,
-    routes_health,
-    routes_me,
-    routes_meal,
-    routes_rag,
-    routes_route,
+from synora_final.backend.app.api import (
     routes_triage,
-    routes_vitals,
 )
-from app.config import get_settings
-from app.firebase import firebase, init_store
-from app.nim import nim
-from app.rag.ingest import build_index
-from app.rag.store import store
+from synora_final.backend.app.api import routes_chat, routes_health, routes_me, routes_meal, routes_rag, routes_route
+from synora_final.backend.app.config import get_settings
+from synora_final.backend.app.firebase import firebase, init_store
+from synora_final.backend.app.nim import nim
+from synora_final.backend.app.rag.ingest import build_index
+from synora_final.backend.app.rag.store import store
 
 settings = get_settings()
 logging.basicConfig(
@@ -52,8 +46,8 @@ app = FastAPI(
     version="1.0.0",
     description=(
         "Holistic health agent backend: deterministic triage, condition-aware nutrition, "
-        "multimodal meal recognition, RAG over a clinical corpus, and real-time wearable "
-        "anomaly detection. The model never decides urgency."
+        "multimodal meal recognition, and RAG over a clinical corpus. "
+        "The model never decides urgency."
     ),
     lifespan=lifespan,
 )
@@ -90,7 +84,6 @@ for module in (
     routes_triage,
     routes_meal,
     routes_rag,
-    routes_vitals,
     routes_chat,
     routes_me,
 ):

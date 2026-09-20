@@ -1,4 +1,4 @@
-import { REGIONS, REGION_IDS } from '../data/regions.js';
+import { REGIONS, MAP_REGION_IDS } from '../data/regions.js';
 
 export default function BodyDiagram({ region, onSelect }) {
   return (
@@ -32,7 +32,7 @@ export default function BodyDiagram({ region, onSelect }) {
         <path d="M120 258h16" />
       </svg>
 
-      {REGION_IDS.map((id) => {
+      {MAP_REGION_IDS.map((id) => {
         const r = REGIONS[id];
         return (
           <span key={id}>

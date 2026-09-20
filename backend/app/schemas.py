@@ -148,6 +148,23 @@ class ProfileUpdate(BaseModel):
         return None if v is None else [c for c in v if c in CONDITION_IDS]
 
 
+class StateUpdate(BaseModel):
+    """The app's whole per-person record. Opaque to the server on purpose: the
+    client owns its shape and merges it; the server only stores and returns it,
+    scoped to the verified uid, and refuses anything too big for one document."""
+
+    state: dict
+
+    @field_validator("state")
+    @classmethod
+    def small_enough(cls, v: dict) -> dict:
+        import json
+
+        if len(json.dumps(v, separators=(",", ":")).encode()) > 900_000:
+            raise ValueError("state too large")
+        return v
+
+
 # ── rag ──────────────────────────────────────────────────────────────────
 class SearchRequest(BaseModel):
     query: str = Field(min_length=2, max_length=500)
@@ -166,22 +183,3 @@ class SearchResponse(BaseModel):
     hits: list[SearchHit]
     retriever: Literal["nim", "lexical"]
     latency_ms: float
-
-
-# ── vitals ───────────────────────────────────────────────────────────────
-class AnomalyEvent(BaseModel):
-    stream_id: str
-    label: str
-    unit: str
-    start_index: int
-    end_index: int
-    samples: int
-    peak_value: float
-    baseline: float
-    delta: float
-    z: float
-    direction: Literal["above", "below"]
-    severity: Literal["info", "caution", "warn"]
-    message: str
-    detect_latency_ms: float
-    emitted_at: float

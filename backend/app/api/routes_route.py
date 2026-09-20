@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.schemas import RouteRequest, RouteResponse
-from app.services.router import classify
+from synora_final.backend.app.schemas import RouteRequest, RouteResponse
+from synora_final.backend.app.services.router import classify
 
 router = APIRouter(prefix="/route", tags=["routing"])
 
